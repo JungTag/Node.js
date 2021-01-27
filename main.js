@@ -1,15 +1,41 @@
-var http = require('http');
-var fs = require('fs');
-var app = http.createServer(function(request,response){
-    var url = request.url;
-    if(request.url == '/'){
-      url = '/index.html';
-    }
-    if(request.url == '/favicon.ico'){
-      return response.writeHead(404);
-    }
-    response.writeHead(200);
-    response.end(fs.readFileSync(__dirname + url));
- 
+const http = require("http");
+const fs = require("fs");
+const url = require("url");
+
+const app = http.createServer(function (request, response) {
+  let _url = request.url;
+  const queryData = url.parse(_url, true).query;
+  let title = queryData.id;
+
+  if (request.url == "/") {
+    title = "Welcome";
+  }
+  if (request.url == "/favicon.ico") {
+    return response.writeHead(404);
+  }
+  response.writeHead(200);
+  fs.readFile(`data/${queryData.id}`, "utf-8", (err, desc) => {
+    const template = `
+      <!doctype html>
+  <html>
+  <head>
+    <title>WEB1 - ${title}</title>
+    <meta charset="utf-8">
+  </head>
+  <body>
+    <h1><a href="/">WEB</a></h1>
+    <ol>
+      <li><a href="/?id=HTML">HTML</a></li>
+      <li><a href="/?id=CSS">CSS</a></li>
+      <li><a href="/?id=JavaScript">JavaScript</a></li>
+    </ol>
+    <h2>${title}</h2>
+    <p>${desc}</p>
+  </body>
+  </html>
+  
+      `;
+    response.end(template);
+  });
 });
 app.listen(3000);
