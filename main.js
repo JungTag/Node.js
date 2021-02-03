@@ -7,12 +7,13 @@ const templateHTML = (title, list, body) => {
 	<!doctype html>
 		<html>
 		<head>
-			<title>WEB1 - ${title}</title>
+			<title>WEB - ${title}</title>
 			<meta charset="utf-8">
 		</head>
 		<body>
 			<h1><a href="/">WEB</a></h1>
-			${list}
+      ${list}
+      <a href="/create">create</a>
 			${body}
 		</body>
 		</html>
@@ -25,22 +26,22 @@ const templateList = (files) => {
   while (i < files.length) {
     list += `<li><a href="/?id=${files[i]}">${files[i]}</a></li>`;
     i += 1;
-	}
-	list += "</ul>";
-	return list;
+  }
+  list += "</ul>";
+  return list;
 };
 const app = http.createServer((request, response) => {
   const _url = request.url;
   const queryData = url.parse(_url, true).query;
   const pathname = url.parse(_url, true).pathname;
-  let title = queryData.id;
+  const qs = require('querystring');
 
   if (pathname === "/") {
     if (queryData.id === undefined) {
       fs.readdir("./data", (err, files) => {
         title = "Welcome";
         desc = "Hello, Node.js";
-				const list = templateList(files);
+        const list = templateList(files);
         const template = templateHTML(
           title,
           list,
@@ -51,7 +52,8 @@ const app = http.createServer((request, response) => {
       });
     } else {
       fs.readdir("./data", (err, files) => {
-				const list = templateList(files);
+        title = queryData.id;
+        const list = templateList(files);
         fs.readFile(`data/${queryData.id}`, "utf-8", (err, desc) => {
           const template = templateHTML(
             title,
@@ -63,7 +65,44 @@ const app = http.createServer((request, response) => {
         });
       });
     }
-  } else {
+  } else if (pathname === "/create") {
+    fs.readdir("./data", (err, files) => {
+      title = "WEB = create";
+      const list = templateList(files);
+      const template = templateHTML(title, list, `
+        <form action="http://localhost:3000/create_process" method="post">
+  <p><input type="text" name="title" placeholder="title"></p>
+  <p>
+    <textarea name="description" placeholder="description"></textarea>
+  </p>
+  <p>
+    <input type="submit">
+  </p>
+</form>
+        `);
+      response.writeHead(200);
+      response.end(template);
+    });
+  } else if(pathname === '/create_process') {
+    let body = '';
+    request.on('data', (data) => {
+      body += data;
+    });
+    request.on('end', () => {
+      const post = qs.parse(body); // 정보를 객체화시킴
+      const title = post.title;
+      const description = post.description;
+      fs.writeFile(`data/${title}`, description, 'utf-8', err => {
+        if (err) 
+          return console.log(err);
+        else {
+          response.writeHead(302, {Location: `/?id=${title}`});
+          response.end();
+        }
+      });
+    });
+  }
+  else {
     response.writeHead(404);
     response.end("Not found");
   }
