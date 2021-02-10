@@ -1,40 +1,18 @@
 const http = require("http");
-const fs = require("fs");
 const url = require("url");
-const path = require("path");
-const sanitizeHtml = require('sanitize-html');
-const mysql = require('mysql');
-const db = mysql.createConnection({
-  host: 'localhost',
-  user: 'root',
-  password: '',
-  database: 'opentutorials'
-});
-db.connect();
-
+const qs = require('querystring');
 const template = require("./lib/template.js")
+const db = require('./lib/db');
+const topic = require('./lib/topic');
 
 const app = http.createServer((request, response) => {
   const _url = request.url;
   const queryData = url.parse(_url, true).query;
   const pathname = url.parse(_url, true).pathname;
-  const qs = require('querystring');
 
   if (pathname === "/") {
     if (queryData.id === undefined) {
-      db.query(`SELECT * FROM topic`, (err, topics) => {
-        const title = "Welcome";
-        const desc = "Hello, Node.js";
-        const list = template.list(topics);
-        const html = template.html(
-          title,
-          list,
-          `<h2>${title}</h2><p>${desc}</p>`,
-          `<a href="/create">create</a>`
-        );        
-        response.writeHead(200);
-        response.end(html);
-      });
+      topic.home(request, response);
     } else {
      db.query(`SELECT * FROM topic`, (err, topics) => {
        if(err) {
