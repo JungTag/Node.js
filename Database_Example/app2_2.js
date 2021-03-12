@@ -1,10 +1,10 @@
 /**
  * 데이터베이스 사용하기
  * 
- * 몽고디비에 사용자 추가하기
+ * 몽고디비의 사용자 정보 수정하기
  
  * 웹브라우저에서 아래 주소의 페이지를 열고 웹페이지에서 요청
- *    http://localhost:3000/public/adduser.html
+ *    http://localhost:3000/public/updateuser.html
  */
 
 // Express 기본 모듈 불러오기
@@ -130,6 +130,37 @@ router.route('/process/adduser').post((req, res) => {
 	}
 });
 
+// 사용자 수정 라우팅 함수 - 클라이언트에서 보내오는 데이터를 이용해 데이터베이스의 사용자 정보 수정
+router.route('/process/updateuser').post((req, res) => {
+	console.log('/process/updateuser 호출됨.');
+	const paramId = req.body.id;
+    const paramPassword = req.body.password;
+    const paramName = req.body.name;
+    console.log('요청 파라미터 : ' + paramId + ', ' + paramPassword + ', ' + paramName);
+    // 데이터베이스 객체가 초기화된 경우, updateUser 함수 호출하여 사용자 추가
+	if (database) {
+		updateUser(database, paramId, paramPassword, paramName, function(err, result) {
+			if (err) {throw err;}
+            // 결과 객체 확인하여 업데이트된 데이터 있으면 성공 응답 전송
+			if (result && result.modifiedCount > 0) {
+				console.dir(result);
+				res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
+				res.write('<h2>사용자 수정 성공</h2>');
+				res.end();
+			} else {  // 결과 객체가 없으면 실패 응답 전송
+				res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
+				res.write('<h2>사용자 수정  실패</h2>');
+				res.end();
+			}
+		});
+	} else {  // 데이터베이스 객체가 초기화되지 않은 경우 실패 응답 전송
+		res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
+		res.write('<h2>데이터베이스 연결 실패</h2>');
+		res.end();
+	}
+	
+});
+
 app.use('/', router);
 
 const authUser = (database, id, password, callback) => {
@@ -177,6 +208,23 @@ const addUser = (database, id, password, name, callback) => {
     }
   );
 };
+
+const updateUser = (database, id, password, name, callback) => {
+  const users = database.collection('users');
+
+  users.updateOne({"id":id}, {"id":id, "password":password, "name":name}, (err, result) => {
+    if (err) {
+      callback(err, null);
+      return;
+    }
+    if (result.modifiedCount > 0) {
+      console.log("사용자 레코드가 수정됨");
+    } else {
+      console.log("수정된 레코드가 없음");
+    }
+    callback(null, result);
+  });
+}
 
 const errorHandler = expressErrorHandler({
   static: {

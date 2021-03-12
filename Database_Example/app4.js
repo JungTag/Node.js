@@ -1,10 +1,13 @@
 /**
  * 데이터베이스 사용하기
  * 
- * 몽고디비에 사용자 추가하기
- 
+ * mongoose로 데이터베이스 다루기
+ * 모델 객체에 추가한 메소드를 이용해 사용자 조회, 사용자 추가
+ *
  * 웹브라우저에서 아래 주소의 페이지를 열고 웹페이지에서 요청
- *    http://localhost:3000/public/adduser.html
+ * (먼저 사용자 추가 후 로그인해야 함)
+ *    http://localhost:3000/public/login.html
+ *    http://localhost:3000/public/adduser2.html
  */
 
 // Express 기본 모듈 불러오기
